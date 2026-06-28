@@ -5,6 +5,7 @@ export async function submitScore(
   playerName: string,
   result: GameResult
 ): Promise<{ error: string | null }> {
+  if (!supabase) return { error: 'Leaderboard is offline.' };
   const { error } = await supabase.from('scores').insert({
     player_name: playerName.trim().slice(0, 20) || 'Anonymous',
     score: result.score,
@@ -18,6 +19,7 @@ export async function submitScore(
 }
 
 export async function fetchTopScores(limit = 10): Promise<LeaderboardEntry[]> {
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from('scores')
     .select('*')
