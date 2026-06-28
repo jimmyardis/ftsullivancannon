@@ -1,6 +1,7 @@
 import type { GameState, Ship, Cannonball, AmmoType, ShipType } from '../types/game';
 import { AudioSystem } from './audio';
 import { ParticleSystem } from './particles';
+import { renderFrame } from './renderer';
 import {
   CANVAS_W, CANVAS_H, GRAVITY, WATER_Y, FORT_RIGHT, CANNON_X, CANNON_Y,
   AMMO, SHIPS, WAVES, WEATHER_BY_WAVE, WEATHER_CONFIG, HISTORICAL_FACTS,
@@ -109,9 +110,10 @@ export class GameEngine {
     const ctx = this.canvas.getContext('2d')!;
     ctx.save();
     ctx.scale(this.scaleX, this.scaleY);
-    import('./renderer').then(m => {
-      m.renderFrame(ctx, this.state, this.particles.particles);
-    });
+    // Draw synchronously so the scale transform is still in effect. (Previously
+    // this used an async dynamic import whose callback ran after restore(), so
+    // the scale never applied and the frame rendered unscaled in a corner.)
+    renderFrame(ctx, this.state, this.particles.particles);
     ctx.restore();
     this.raf = requestAnimationFrame(() => this.loop());
   }

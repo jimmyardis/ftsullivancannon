@@ -40,6 +40,13 @@ export default function GameCanvas({ onGameOver }: Props) {
     window.addEventListener('resize', onResize);
     window.addEventListener('orientationchange', onResize);
 
+    // Unlock audio on the first real user gesture (browsers start the
+    // AudioContext suspended and only resume it from within a gesture).
+    const unlockAudio = () => engine.audio.resume();
+    window.addEventListener('pointerdown', unlockAudio);
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
+    window.addEventListener('keydown', unlockAudio);
+
     // --- Mouse / keyboard (desktop) ---
     const onMouseMove = (e: MouseEvent) => engine.handleMouseMove(e.clientX, e.clientY);
     const onWheel = (e: WheelEvent) => { e.preventDefault(); engine.handleWheel(e.deltaY); };
@@ -72,6 +79,9 @@ export default function GameCanvas({ onGameOver }: Props) {
 
     return () => {
       engine.stop();
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
       portraitQuery.removeEventListener('change', syncOrientation);
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', onResize);

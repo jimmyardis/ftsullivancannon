@@ -25,6 +25,14 @@ export class AudioSystem {
     if (this.masterGain) this.masterGain.gain.value = v;
   }
 
+  // Browsers create an AudioContext in a "suspended" state and only allow it to
+  // start from within a user gesture. Call this from a tap/click/keypress.
+  resume() {
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => { /* ignore — will retry on next gesture */ });
+    }
+  }
+
   private startAmbient() {
     if (!this.ctx || !this.masterGain) return;
     // Ocean low rumble
