@@ -10,6 +10,7 @@ export default function GameCanvas({ onGameOver }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const [isPortrait, setIsPortrait] = useState(false);
+  const [dismissedRotate, setDismissedRotate] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -20,14 +21,22 @@ export default function GameCanvas({ onGameOver }: Props) {
     engine.onGameOver = onGameOver;
     engine.start();
 
-    // Track orientation so we can prompt the player to rotate on phones.
-    // The game is designed in a wide 16:9 space, so portrait is unplayable.
+    // Track orientation so we can suggest rotating on phones — the game is
+    // designed in a wide 16:9 space, so portrait is cramped. This is only a
+    // suggestion: the overlay is dismissible (some phones have rotation lock on,
+    // which would otherwise trap the player here forever).
     const portraitQuery = window.matchMedia('(orientation: portrait)');
-    const syncOrientation = () => setIsPortrait(portraitQuery.matches);
+    const syncOrientation = () =>
+      setIsPortrait(portraitQuery.matches || window.innerHeight > window.innerWidth);
     syncOrientation();
     portraitQuery.addEventListener('change', syncOrientation);
 
-    const onResize = () => { engine.resize(); syncOrientation(); };
+    const onResize = () => {
+      engine.resize();
+      syncOrientation();
+      // iOS reports stale dimensions right after a rotation; re-check shortly.
+      window.setTimeout(() => { engine.resize(); syncOrientation(); }, 300);
+    };
     window.addEventListener('resize', onResize);
     window.addEventListener('orientationchange', onResize);
 
@@ -84,16 +93,25 @@ export default function GameCanvas({ onGameOver }: Props) {
         className="w-full h-full block cursor-crosshair"
         style={{ imageRendering: 'crisp-edges', touchAction: 'none' }}
       />
-      {isPortrait && (
+      {isPortrait && !dismissedRotate && (
         <div
           className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center px-8 z-50"
           style={{ background: 'radial-gradient(ellipse at center, #1a1208 0%, #060402 100%)', fontFamily: 'Georgia, serif' }}
         >
           <div className="text-5xl">📱↻</div>
-          <h2 className="text-2xl font-bold text-amber-300">Rotate your device</h2>
+          <h2 className="text-2xl font-bold text-amber-300">Turn your phone sideways</h2>
           <p className="text-amber-500/70 max-w-xs">
-            Fort Sullivan is best defended in landscape. Turn your phone sideways to manage the cannons.
+            Fort Sullivan plays best in landscape. If it won't rotate, your screen
+            may be locked — swipe open Control Center and turn off the
+            Portrait Orientation Lock.
           </p>
+          <button
+            onClick={() => setDismissedRotate(true)}
+            className="mt-2 px-6 py-2 bg-amber-900/70 border border-amber-500/60 text-amber-200
+              hover:bg-amber-700/80 transition-colors"
+          >
+            Play anyway →
+          </button>
         </div>
       )}
     </>
