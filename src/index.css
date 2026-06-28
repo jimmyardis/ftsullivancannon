@@ -13,6 +13,13 @@ html, body, #root {
   padding: 0;
   overflow: hidden;
   background: #060402;
+  /* Stop mobile pull-to-refresh / rubber-band scrolling from interrupting aiming. */
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  height: 100dvh;
 }
 
 ::-webkit-scrollbar {

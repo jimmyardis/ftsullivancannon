@@ -63,7 +63,8 @@ export class GameEngine {
   particles: ParticleSystem;
   private raf = 0;
   private lastTime = 0;
-  private scale = 1;
+  private scaleX = 1;
+  private scaleY = 1;
 
   onGameOver?: (result: GameResult) => void;
 
@@ -80,9 +81,13 @@ export class GameEngine {
 
   resize() {
     const rect = this.canvas.getBoundingClientRect();
-    this.canvas.width = rect.width * devicePixelRatio;
-    this.canvas.height = rect.height * devicePixelRatio;
-    this.scale = this.canvas.width / CANVAS_W;
+    this.canvas.width = Math.max(1, Math.round(rect.width * devicePixelRatio));
+    this.canvas.height = Math.max(1, Math.round(rect.height * devicePixelRatio));
+    // Scale the fixed 1280x720 design space to fill the canvas on both axes.
+    // Filling (rather than fitting) means no black bars — at the cost of a
+    // small stretch when the screen's aspect ratio differs from 16:9.
+    this.scaleX = this.canvas.width / CANVAS_W;
+    this.scaleY = this.canvas.height / CANVAS_H;
   }
 
   start() {
@@ -103,7 +108,7 @@ export class GameEngine {
     this.update(dt);
     const ctx = this.canvas.getContext('2d')!;
     ctx.save();
-    ctx.scale(this.scale, this.scale);
+    ctx.scale(this.scaleX, this.scaleY);
     import('./renderer').then(m => {
       m.renderFrame(ctx, this.state, this.particles.particles);
     });

@@ -27,7 +27,10 @@ export default function App() {
   };
 
   return (
-    <div className="w-screen h-screen overflow-hidden bg-black relative">
+    <div
+      className="w-screen h-screen overflow-hidden bg-black relative"
+      style={{ width: '100vw', height: '100dvh' }}
+    >
       {screen === 'game' && (
         <GameCanvas key={gameKey.current} onGameOver={handleGameOver} />
       )}
